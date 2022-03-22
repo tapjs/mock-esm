@@ -58,6 +58,7 @@ export {exp${i++} as ${kSrc}}\n`
     src.push(`const defExp = ${mockSrc}
 export default defExp\n`)
   }
+  console.error(src)
   return src.join('\n')
 }
 
@@ -93,30 +94,29 @@ export const load = async (url, context, defaultFn) => {
 }
 
 export const resolve = async (url, context, defaultFn) => {
-  const res = defaultFn(url, context, defaultFn)
   if (!context.parentURL) {
-    return res
+    return defaultFn(url, context, defaultFn)
   }
   const p = new URL(context.parentURL)
   const key = p.searchParams.get('tapmock')
   if (!key) {
-    return res
+    return defaultFn(url, context, defaultFn)
   }
   const m = global[`__tapmock${key}`]
   if (!m || !m.mocks || typeof m.mocks !== 'object' || m.key !== key) {
-    return res
+    return defaultFn(url, context, defaultFn)
   }
 
-  const resolved = await res
-  if (!hasOwn(m.mocks, resolved.url)) {
+  const resolvedURL = String(new URL(url, context.parentURL))
+  if (!hasOwn(m.mocks, resolvedURL)) {
     // parent is mocked, but this module isn't, so the things IT loads
     // should be loaded from the mock, even though it isn't.
-    const mocker = new URL(resolved.url)
+    const mocker = new URL(resolvedURL)
     mocker.searchParams.set('tapmock', key)
-    return { ...resolved, url: `${mocker}` }
+    return defaultFn(mocker, context, defaultFn)
   }
 
   const mockRes = new URL(`tapmock://${key}/`)
-  mockRes.searchParams.set('url', resolved.url)
+  mockRes.searchParams.set('url', resolvedURL)
   return { url: `${mockRes}`, format: 'module' }
 }

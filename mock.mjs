@@ -37,6 +37,7 @@ export const mock = async (module, mocks) => {
   const key = randomBytes(8).toString('hex')
 
   mocks = Object.entries(mocks).map(([k, m]) => {
+    m = m && typeof m === 'object' ? m : { default: m }
     if (/^(node:|file:\/\/\/|https?:\/\/)/.test(k)) {
       return [k, m]
     } else if (/^\.\.?\//.test(k)) {
@@ -49,6 +50,7 @@ export const mock = async (module, mocks) => {
 
   Object.defineProperty(global, `__tapmock${key}`, {
     value: Object.freeze({
+      unmock: () => mocks = null,
       mocks,
       key,
       caller: Object.freeze({
@@ -66,7 +68,5 @@ export const mock = async (module, mocks) => {
 
   const start = new URL(module, url)
   start.searchParams.set('tapmock', key)
-  const result = await import(`${start}`)
-  registry.set(result, key)
-  return result
+  return await import(`${start}`)
 }
