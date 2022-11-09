@@ -10,7 +10,7 @@ const loader = `${pathToFileURL(
 
 const getStack = fn => {
   const obj = {}
-  Error.captureStackTrace(obj, mock)
+  Error.captureStackTrace(obj, fn)
   return obj.stack.split('\n').slice(1).join('\n')
 }
 

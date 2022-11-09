@@ -58,7 +58,6 @@ export {exp${i++} as ${kSrc}}\n`
     src.push(`const defExp = ${mockSrc}
 export default defExp\n`)
   }
-  console.error(src)
   return src.join('\n')
 }
 
@@ -87,6 +86,7 @@ export const load = async (url, context, defaultFn) => {
     return {
       format: 'module',
       source,
+      shortCircuit: true,
     }
   }
   const res = defaultFn(url, context, defaultFn)
@@ -118,5 +118,5 @@ export const resolve = async (url, context, defaultFn) => {
 
   const mockRes = new URL(`tapmock://${key}/`)
   mockRes.searchParams.set('url', resolvedURL)
-  return { url: `${mockRes}`, format: 'module' }
+  return { url: `${mockRes}`, format: 'module', shortCircuit: true }
 }
